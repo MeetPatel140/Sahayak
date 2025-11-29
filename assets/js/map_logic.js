@@ -5,12 +5,13 @@ var helperMarkers = [];
 function initializeMap() {
     if (!document.getElementById('map')) return;
     
-    // Initialize map centered on India
-    map = L.map('map').setView([20.5937, 78.9629], 5);
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([20.5937, 78.9629], 5);
 
-    // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        maxZoom: 19
     }).addTo(map);
 
     // Get user's current location
@@ -19,27 +20,21 @@ function initializeMap() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            // Center map on user location
-            map.setView([lat, lng], 13);
+            map.setView([lat, lng], 14);
             
-            // Add user location marker
             userMarker = L.marker([lat, lng], {
                 icon: L.divIcon({
                     className: 'user-location-marker',
-                    html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
+                    html: '<div style="background: #0D9488; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
                 })
             }).addTo(map);
             
-            userMarker.bindPopup('<b>📍 Your Location</b>').openPopup();
-            
-            // Load and display nearby helpers on map
             loadHelpersOnMap(lat, lng);
             
         }, function(error) {
             console.error('Geolocation error:', error);
-            alert('Please enable location access for better experience.');
         });
     }
 }
@@ -61,18 +56,17 @@ function loadHelpersOnMap(userLat, userLng) {
             const helperMarker = L.marker([helperLat, helperLng], {
                 icon: L.divIcon({
                     className: 'helper-marker',
-                    html: '<div style="background: #10b981; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
+                    html: '<div style="background: #0D9488; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
                 })
             }).addTo(map);
             
             helperMarker.bindPopup(`
-                <div class="p-2">
-                    <b>${helper.full_name}</b><br>
-                    <small class="text-gray-600">${helper.skill_tags}</small><br>
-                    <span class="text-green-600 font-semibold">₹${helper.base_rate}/hr</span><br>
-                    <small>${helper.distance.toFixed(1)}km away</small>
+                <div style="padding: 8px; min-width: 150px;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${helper.full_name}</div>
+                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">${helper.skill_tags}</div>
+                    <div style="font-size: 14px; color: #0D9488; font-weight: 600;">₹${helper.base_rate}/hr • ${helper.distance.toFixed(1)}km</div>
                 </div>
             `);
             
@@ -88,17 +82,17 @@ function addHelperMarker(lat, lng, name, skills, rate) {
     const marker = L.marker([lat, lng], {
         icon: L.divIcon({
             className: 'helper-marker',
-            html: '<div style="background: #10b981; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            html: '<div style="background: #0D9488; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"></div>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
         })
     }).addTo(map);
     
     marker.bindPopup(`
-        <div class="p-2">
-            <b>${name}</b><br>
-            <small>${skills}</small><br>
-            <span class="text-green-600">₹${rate}/hr</span>
+        <div style="padding: 8px;">
+            <div style="font-weight: 600;">${name}</div>
+            <div style="font-size: 12px; color: #6B7280;">${skills}</div>
+            <div style="color: #0D9488; font-weight: 600;">₹${rate}/hr</div>
         </div>
     `);
     
@@ -108,11 +102,10 @@ function addHelperMarker(lat, lng, name, skills, rate) {
 function updateUserLocation(lat, lng) {
     if (userMarker) {
         userMarker.setLatLng([lat, lng]);
-        map.setView([lat, lng], 13);
+        map.setView([lat, lng], 14);
     }
 }
 
-// Initialize map when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeMap, 500); // Small delay to ensure DOM is ready
+    setTimeout(initializeMap, 300);
 });

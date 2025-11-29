@@ -19,186 +19,152 @@ $user = $stmt->get_result()->fetch_assoc();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sahay - सहाय</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#00796B">
+    <title>Sahay</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'teal': {
-                            500: '#00796B',
-                            600: '#00695C'
-                        },
-                        'orange': {
-                            400: '#FFB74D',
-                            500: '#FF9800'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Location Alert -->
-    <div id="location-alert" class="hidden fixed top-0 left-0 right-0 bg-orange-500 text-white p-3 text-center z-50">
-        <i class="fas fa-location-arrow mr-2"></i>
-        Please enable location access for better experience.
-        <button onclick="checkLocationPermission()" class="ml-3 underline">Enable Now</button>
+<body class="overflow-hidden">
+    <div id="location-alert" class="hidden fixed top-0 left-0 right-0 bg-orange-500 text-white p-2 text-center z-50 text-sm">
+        <i class="fas fa-location-arrow mr-1"></i>Enable location for better experience
+        <button onclick="checkLocationPermission()" class="ml-2 underline font-medium">Enable</button>
     </div>
     
-    <div class="container mx-auto p-4 max-w-md">
-        
-        <!-- Header -->
-        <div class="bg-white p-4 rounded-2xl shadow-xl mb-4">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-bars text-gray-600"></i>
-                    <h1 class="text-xl font-bold text-teal-600">SAHAY</h1>
+    <!-- Full Screen Map -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+    
+    <!-- Top Header Bar -->
+    <div class="fixed top-0 left-0 right-0 z-40 p-4">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <button onclick="document.getElementById('menu').classList.toggle('hidden')" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
+                <i class="fas fa-bars text-gray-700"></i>
+            </button>
+            <div class="flex items-center space-x-3">
+                <button class="px-4 py-2 bg-white rounded-full shadow-lg text-sm font-medium text-gray-700">
+                    <?php echo ($active_mode === 'helper') ? 'HELP' : 'SEEK'; ?>
+                </button>
+                <div class="px-4 py-2 bg-teal-600 text-white rounded-full shadow-lg text-sm font-bold">
+                    ₹<?php echo number_format($user['wallet_balance'], 0); ?>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <div class="bg-teal-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        ₹<?php echo number_format($user['wallet_balance'], 0); ?>
-                    </div>
-                    <button onclick="document.getElementById('menu').classList.toggle('hidden')" class="text-gray-600">
-                        <i class="fas fa-user-circle text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="menu" class="hidden mt-3 pt-3 border-t">
-                <p class="text-sm text-gray-600 mb-2">Welcome, <?php echo htmlspecialchars($user['full_name']); ?></p>
-                <a href="api/logout.php" class="text-red-500 text-sm"><i class="fas fa-sign-out-alt mr-1"></i>Logout</a>
             </div>
         </div>
-        
-        <!-- Mode Switch (Only for helpers) -->
-        <?php if ($user['user_type'] === 'helper'): ?>
-        <div class="bg-gradient-to-r from-teal-500 to-teal-600 p-4 rounded-2xl shadow-xl mb-4 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="font-semibold text-lg">
-                        <?php echo ($active_mode === 'helper') ? 'Helping Mode' : 'Customer Mode'; ?>
-                    </div>
-                    <div class="text-sm opacity-90">
-                        <?php echo ($active_mode === 'helper') ? 'You are LIVE and visible' : 'Switch to earn money'; ?>
-                    </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="mode-toggle" onchange="toggleMode(this.checked)" 
-                        <?php echo ($active_mode === 'helper') ? 'checked' : ''; ?> class="sr-only peer">
-                    <div class="w-14 h-8 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-500"></div>
-                </label>
-            </div>
+    </div>
+    
+    <!-- Side Menu -->
+    <div id="menu" class="hidden fixed top-0 left-0 w-64 h-full bg-white shadow-2xl z-50 p-6">
+        <button onclick="document.getElementById('menu').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <div class="mt-8">
+            <p class="text-sm text-gray-500 mb-1">Welcome</p>
+            <p class="font-bold text-lg mb-6"><?php echo htmlspecialchars($user['full_name']); ?></p>
+            <a href="api/logout.php" class="text-red-500 text-sm flex items-center">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
         </div>
-        <?php endif; ?>
+    </div>
+        
+    <?php if ($user['user_type'] === 'helper'): ?>
+    <div class="fixed top-20 left-0 right-0 z-30 px-4">
+        <div class="max-w-md mx-auto bg-gradient-to-r from-teal-600 to-teal-700 p-3 rounded-full shadow-xl text-white flex items-center justify-between">
+            <span class="text-sm font-medium ml-2"><?php echo ($active_mode === 'helper') ? 'LIVE' : 'SEEK'; ?></span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="mode-toggle" onchange="toggleMode(this.checked)" 
+                    <?php echo ($active_mode === 'helper') ? 'checked' : ''; ?> class="sr-only peer">
+                <div class="w-12 h-7 bg-white/30 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+            </label>
+        </div>
+    </div>
+    <?php endif; ?>
 
-        <!-- Customer View -->
-        <?php if ($active_mode === 'customer'): ?>
-        <div id="customer-view">
-            <!-- Map Background -->
-            <div class="relative mb-4">
-                <div id="map" style="height: 400px;" class="rounded-2xl shadow-xl"></div>
+    <?php if ($active_mode === 'customer'): ?>
+    <div id="customer-view" class="relative z-10">
+        <!-- Floating Input Card -->
+        <div class="fixed bottom-0 left-0 right-0 z-30 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6">
+                <h2 class="text-2xl font-bold text-center mb-2 text-gray-900">What help do you need?</h2>
+                <p class="text-center text-gray-400 text-sm mb-6">"Bol kar madad maange"</p>
                 
-                <!-- Floating Input Card -->
-                <div class="absolute bottom-4 left-4 right-4 bg-white p-6 rounded-2xl shadow-2xl">
-                    <h2 class="text-xl font-bold text-center mb-4 text-gray-800">What help do you need?</h2>
-                    <p class="text-center text-gray-500 text-sm mb-4">"Bol kar madad maange"</p>
+                <form id="taskForm" onsubmit="postTask(event)">
+                    <div class="flex justify-center mb-6">
+                        <button type="button" onclick="startListening()" 
+                            class="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform">
+                            <i class="fas fa-microphone text-3xl"></i>
+                        </button>
+                    </div>
+                    <span id="status-text" class="block text-center text-sm text-gray-500 mb-4"></span>
                     
-                    <form id="taskForm" onsubmit="postTask(event)">
-                        <div class="flex items-center justify-center mb-4">
-                            <button type="button" onclick="startListening()" 
-                                class="w-20 h-20 bg-orange-400 hover:bg-orange-500 text-white rounded-full shadow-xl transition-all duration-300 hover:scale-105">
-                                <i class="fas fa-microphone text-2xl"></i>
-                            </button>
-                        </div>
-                        <span id="status-text" class="block text-center text-sm text-gray-600 mb-3"></span>
-                        
-                        <textarea id="task_input" name="description" placeholder="या यहाँ टाइप करें..." 
-                                 class="w-full p-3 border border-gray-200 rounded-xl mb-3 text-sm" rows="2" required></textarea>
-                        
-                        <div class="flex space-x-3">
-                            <input type="number" name="budget" placeholder="Budget (₹)" 
-                                   class="flex-1 p-3 border border-gray-200 rounded-xl text-sm" required>
-                            <button type="submit" class="bg-teal-500 text-white px-6 py-3 rounded-xl hover:bg-teal-600 transition-colors">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="bg-white p-4 rounded-2xl shadow-xl">
-                <div id="helpers-list">
-                    <h3 class="font-bold mb-3 text-gray-800"><i class="fas fa-users text-teal-500 mr-2"></i>Available Helpers Nearby:</h3>
-                    <div class="text-gray-500 text-center py-4">Loading helpers...</div>
-                </div>
+                    <textarea id="task_input" name="description" placeholder="Type your need here..." 
+                             class="w-full p-4 border-2 border-gray-100 rounded-2xl mb-4 text-sm focus:border-teal-500 focus:outline-none" rows="2" required></textarea>
+                    
+                    <div class="flex gap-3">
+                        <input type="number" name="budget" placeholder="Budget ₹" 
+                               class="flex-1 p-4 border-2 border-gray-100 rounded-2xl text-sm focus:border-teal-500 focus:outline-none" required>
+                        <button type="submit" class="bg-teal-600 text-white px-8 py-4 rounded-2xl hover:bg-teal-700 transition-colors font-medium">
+                            Find
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-        <?php endif; ?>
-
-        <!-- Helper View -->
-        <?php if ($active_mode === 'helper'): ?>
-        <div id="helper-view">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-2xl shadow-xl mb-4 text-white">
-                <div class="text-center">
-                    <div class="w-4 h-4 bg-red-500 rounded-full mx-auto mb-2 animate-pulse"></div>
-                    <h2 class="text-xl font-bold mb-2">Aap Live Hain</h2>
-                    <p class="text-sm opacity-90 mb-3">Customers can see you and send tasks</p>
-                    <button onclick="updateLocation()" class="bg-white/20 text-white px-4 py-2 rounded-full text-sm hover:bg-white/30 transition-colors">
-                        <i class="fas fa-location-arrow mr-1"></i> Update Location
-                    </button>
-                </div>
+        
+        <!-- Helpers List (Slide up panel) -->
+        <div id="helpers-panel" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl max-h-96 overflow-y-auto">
+            <div class="max-w-md mx-auto p-6">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <div id="helpers-list"></div>
             </div>
-            
-            <div class="bg-white p-4 rounded-2xl shadow-xl">
-                <h3 class="font-bold mb-3 text-gray-800"><i class="fas fa-tasks text-orange-500 mr-2"></i>Available Tasks Near You:</h3>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($active_mode === 'helper'): ?>
+    <div id="helper-view" class="relative z-10">
+        <!-- Live Status Card -->
+        <div class="fixed top-32 left-0 right-0 z-30 px-4">
+            <div class="max-w-md mx-auto bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-3xl shadow-2xl text-white text-center">
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></div>
+                    <span class="font-bold text-lg">You are LIVE</span>
+                </div>
+                <p class="text-sm opacity-90">Customers can see you</p>
+            </div>
+        </div>
+        
+        <!-- Tasks List -->
+        <div class="fixed bottom-0 left-0 right-0 z-30 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6 max-h-96 overflow-y-auto">
+                <h3 class="font-bold mb-4 text-gray-900 flex items-center">
+                    <i class="fas fa-tasks text-orange-500 mr-2"></i>Available Tasks
+                </h3>
                 <div id="tasks-list">
-                    <div class="text-gray-500 text-center py-8">
-                        <i class="fas fa-search text-3xl mb-2 opacity-50"></i>
-                        <div>Looking for tasks...</div>
+                    <div class="text-gray-400 text-center py-8">
+                        <i class="fas fa-search text-4xl mb-3 opacity-30"></i>
+                        <div class="text-sm">Looking for tasks...</div>
                     </div>
                 </div>
             </div>
         </div>
-        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
-        <!-- My Tasks Section -->
-        <div class="bg-white p-4 rounded-2xl shadow-xl mt-4">
-            <h3 class="font-bold mb-3 text-gray-800"><i class="fas fa-history text-gray-500 mr-2"></i>My Recent Tasks</h3>
-            <div id="my-tasks-list">
-                <div class="text-gray-500 text-center py-4">Loading your tasks...</div>
+    <!-- My Tasks Panel (Hidden by default) -->
+    <div id="my-tasks-panel" class="hidden fixed inset-0 bg-black/50 z-50" onclick="this.classList.add('hidden')">
+        <div class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-96 overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="max-w-md mx-auto p-6">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 class="font-bold mb-4 text-gray-900"><i class="fas fa-history text-gray-400 mr-2"></i>My Tasks</h3>
+                <div id="my-tasks-list"></div>
             </div>
         </div>
     </div>
-    
-    <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 max-w-md mx-auto">
-        <div class="flex justify-around">
-            <button class="p-3 text-teal-500">
-                <i class="fas fa-home text-xl"></i>
-            </button>
-            <button class="p-3 text-gray-400">
-                <i class="fas fa-search text-xl"></i>
-            </button>
-            <button class="p-3 text-gray-400">
-                <i class="fas fa-bell text-xl"></i>
-            </button>
-            <button class="p-3 text-gray-400">
-                <i class="fas fa-user text-xl"></i>
-            </button>
-        </div>
-    </div>
-    
-    <div class="h-20"></div> <!-- Spacer for bottom nav -->
 
-    <script src="assets/js/app.js"></script>
     <script src="assets/js/map_logic.js"></script>
     <script src="assets/js/voice_logic.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>
